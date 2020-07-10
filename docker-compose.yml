@@ -4,8 +4,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: dasa
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DIALECT: postgres
     image: dasaapp
-    command: nodemon index
+    command: nodemon server
     ports:
       - "8082:8082"
     volumes:
@@ -17,6 +24,8 @@ services:
   db:
     image: postgres:13
     environment:
-      - POSTGRES_PASSWORD=root
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: dasa
     volumes:
       - "./database/data:/var/lib/postgres"
