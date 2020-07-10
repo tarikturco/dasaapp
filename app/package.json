@@ -1,5 +1,7 @@
 {
-  "scripts": {},
+  "scripts": {
+    "migrate": "docker-compose run  dasaapp npx sequelize db:migrate"
+  },
   "dependencies": {
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",

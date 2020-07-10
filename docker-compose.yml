@@ -5,16 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: dasa
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DIALECT: postgres
+      DB_URL: postgresql://root:root@db:5432/dasa
     image: dasaapp
     command: nodemon server
     ports:
-      - "8082:8082"
+      - "3000:3000"
     volumes:
       - ./app:/app
     stdin_open: true
