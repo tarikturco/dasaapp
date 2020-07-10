@@ -11,9 +11,24 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Laboratories.init({
-    name: DataTypes.STRING,
-    address: DataTypes.STRING,
-    status: DataTypes.ENUM(['ACTIVE', 'INACTIVE'])
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        notEmpty: true,
+      }
+    },
+    address:  {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      }
+    },
+    status:  {
+      type: DataTypes.ENUM(['ACTIVE', 'INACTIVE'])
+    },
   }, {
     sequelize,
     modelName: 'Laboratories',

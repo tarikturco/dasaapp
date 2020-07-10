@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     environment:
       DB_URL: postgresql://root:root@db:5432/dasa
+      NODE_ENV: development
     image: dasaapp
     command: nodemon server
     ports:
@@ -24,3 +25,19 @@ services:
       POSTGRES_DB: dasa
     volumes:
       - "./database/data:/var/lib/postgres"
+  dasatest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dasaapp
+    volumes:
+      - ./app:/app
+    links:
+      - dbtest
+  dbtest:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: dasatest
+    restart: always

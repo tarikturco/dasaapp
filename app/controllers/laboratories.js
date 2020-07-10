@@ -1,13 +1,16 @@
 const models = require('../models');
 
-const createRequest = async (req, res) => {
+const createRequest = async (req, res, next) => {
   
   const { name, address } = req.body;
-  // TODO: validate
   
-  const lab = await models.Laboratories.create({ name, address });
+  try {
+    const lab = await models.Laboratories.create({ name, address });
   
-  return res.send(lab);
+    return res.send(lab);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const updateRequest = async (req, res) => {
