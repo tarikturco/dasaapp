@@ -1,0 +1,22 @@
+version: '3.6'
+services:
+  dasaapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dasaapp
+    command: nodemon index
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./app:/app
+    stdin_open: true
+    tty: true
+    links:
+      - db
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=root
+    volumes:
+      - "./database/data:/var/lib/postgres"
