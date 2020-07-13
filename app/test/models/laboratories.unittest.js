@@ -21,7 +21,7 @@ describe('Laboratories model', () => {
     
     try {
       await models.Laboratories.create({
-        name: "Jonas Kahnwald",
+        name: "Jonas Kahnwald's lab",
         address: ""
       });
       throw new Error('There is no error');

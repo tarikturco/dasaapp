@@ -1,4 +1,5 @@
 const models = require('../models');
+const findByPk = require('../lib/findByPk');
 
 const createRequest = async (req, res, next) => {
   
@@ -7,41 +8,58 @@ const createRequest = async (req, res, next) => {
   try {
     const lab = await models.Laboratories.create({ name, address });
   
+    return res.status(201).send(lab);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateRequest = async (req, res, next) => {
+
+  const { name, address } = req.body;
+
+  try {
+    const lab = await findByPk('Laboratories', req.params.id);
+  
+    await lab.update({ name, address });
+    
     return res.send(lab);
   } catch (error) {
     next(error);
   }
 };
 
-const updateRequest = async (req, res) => {
-  return res.send('Updating!');
+const deleteRequest = async (req, res, next) => {
+  
+  try {
+    const lab = await findByPk('Laboratories', req.params.id);
+  
+    await lab.update({ status: 'INACTIVE' });
+  
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 };
 
-const deleteRequest = async (req, res) => {
+const readRequest = async (req, res, next) => {
   
-  const lab = await models.Laboratories.findByPk(req.params.id);
-  
-  if (!lab) {
-    res.status(404).send({ error: 'Lab not found' });
-    return;
-  }
-  if (lab.status == 'INACTIVE') {
-    res.status(412).send({ error: 'Lab was already inactivated' });
-    return;
-  }
-  
-  await lab.update({ status: 'INACTIVE' });
-  
-  return res.status(204).send();
-};
+  try {
+    if (req.params.id) {
 
-const readRequest = async (req, res) => {
+      const lab = await findByPk('Laboratories', req.params.id);
+    
+      return res.send(lab);
+    }
+
+    const labs = await models.Laboratories.findAll({
+      where: { status: 'ACTIVE' }
+    });
   
-  const labs = await models.Laboratories.findAll({
-    where: { status: 'ACTIVE' }
-  });
-  
-  return res.send(labs);
+    return res.send(labs);
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {

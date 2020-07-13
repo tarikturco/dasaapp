@@ -1,8 +1,7 @@
 {
-  "description": "teste",
   "scripts": {
-    "migrate": "docker-compose run dasaapp npx sequelize db:migrate",
-    "test": "docker-compose run dasatest ./test.sh"
+    "migrate": "npx sequelize db:migrate",
+    "test": "./test.sh"
   },
   "nyc": {
     "report-dir": "./coverage",
@@ -14,6 +13,7 @@
     "express": "^4.17.1",
     "pg": "^8.3.0",
     "pg-hstore": "^2.3.3",
+    "pluralize": "^8.0.0",
     "sequelize": "^6.3.1"
   },
   "devDependencies": {
