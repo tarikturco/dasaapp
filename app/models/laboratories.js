@@ -7,6 +7,9 @@ module.exports = (sequelize, DataTypes) => {
 
     static associate(models) {
       Laboratories.belongsToMany(models.Exams, { through: 'LabExams', foreignKey: 'laboratoryId' });
+      Laboratories.addScope('active', {
+        where: { inactivatedAt: null }
+      });
     }
   }
 
@@ -26,9 +29,22 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty: true,
       }
     },
-    status:  {
-      type: DataTypes.ENUM(['ACTIVE', 'INACTIVE'])
+    inactivatedAt:  {
+      type: DataTypes.DATE
     },
+    status: {
+      type: DataTypes.VIRTUAL,
+      set: function (val) {
+        if (val == 'ACTIVE') {
+          // It is not possible to reactivate this model
+          return;
+        }
+        this.setDataValue('inactivatedAt', new Date());
+      },
+      get: function () {
+        return this.getDataValue('inactivatedAt') == null ? 'ACTIVE' : 'INACTIVE';
+      }
+    }
   }, {
     sequelize,
     modelName: 'Laboratories',

@@ -21,6 +21,7 @@ describe('Exam controller', () => {
 
     sandbox.stub(models.Exams, 'create');
     sandbox.stub(models.Exams, 'findAll');
+    sandbox.stub(models.Exams, 'searchByName');
 
     examController = require('../../controllers/exams');
   });
@@ -30,6 +31,7 @@ describe('Exam controller', () => {
     findByPk.resetHistory();
     models.Exams.create.resetHistory();
     models.Exams.findAll.resetHistory();
+    models.Exams.searchByName.resetHistory();
     res.send.resetHistory();
     res.status.resetHistory();
   });
@@ -160,6 +162,7 @@ describe('Exam controller', () => {
 
       assert.ok(findByPk.calledOnce, 'findByPk was called once');
       assert.ok(models.Exams.findAll.notCalled, 'find all exams was not called');
+      assert.ok(models.Exams.searchByName.notCalled, 'searchByName was not called');
 
       assert.ok(res.send.calledOnce, 'res.send was called once');
       assert.equal(res.send.args[0][0], exam, 'res.send was called correctly');
@@ -168,15 +171,34 @@ describe('Exam controller', () => {
     });
 
     it('Should return all exams when there is no id', async () => {
-      const params = {};
+      const params = {}, query = {};
       const exams = [{ id: 4 }, { id: 6 }];
 
       models.Exams.findAll.resolves(exams);
 
-      await examController.readRequest({ params }, res, next);
+      await examController.readRequest({ params, query }, res, next);
 
       assert.ok(findByPk.notCalled, 'findByPk was not called');
       assert.ok(models.Exams.findAll.calledOnce, 'find all exams was called once');
+      assert.ok(models.Exams.searchByName.notCalled, 'searchByName was not called');
+
+      assert.ok(res.send.calledOnce, 'res.send was called once');
+      assert.equal(res.send.args[0][0], exams, 'res.send was called correctly');
+
+      assert.ok(next.notCalled, 'Next was not called');
+    });
+
+    it('Should search by name when there is a search field in query string', async () => {
+      const params = { }, query = { search: 'ECG' };
+      const exams = [{ id: 2, name: 'ECG' }, { id: 13, name: 'Eletrocardiograma (ecg)' }];
+
+      models.Exams.searchByName.resolves(exams);
+
+      await examController.readRequest({ params, query }, res, next);
+
+      assert.ok(findByPk.notCalled, 'findByPk was not called');
+      assert.ok(models.Exams.findAll.notCalled, 'find all exams was not called');
+      assert.ok(models.Exams.searchByName.calledOnce, 'searchByName was called once');
 
       assert.ok(res.send.calledOnce, 'res.send was called once');
       assert.equal(res.send.args[0][0], exams, 'res.send was called correctly');

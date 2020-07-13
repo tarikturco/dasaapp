@@ -55,6 +55,23 @@ describe('Laboratories model', () => {
 
   });
 
+  it('Should deactivate a lab', async () => {
+
+    const lab = await models.Laboratories.findByPk(1);
+    assert.equal(lab.status, 'ACTIVE', 'The current status is active');
+
+    await lab.update({ status: 'INACTIVE' });
+
+    assert.notEqual(lab.deactivatedAt, 'deactivatedAt is not true');
+
+    const activeLab = await models.Laboratories.scope('active').findByPk(1);
+
+    assert.ok(!activeLab, 'There is no active lab with this id');
+
+    await lab.update({ status: 'ACTIVE' });
+    assert.equal(lab.status, 'INACTIVE', 'The status is still inactive (it is not possible to reactivate)');
+  });
+
   after(async () => {
     await models.Laboratories.destroy({ truncate: true });
   });

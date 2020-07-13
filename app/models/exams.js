@@ -1,6 +1,6 @@
 'use strict';
 const {
-  Model
+  Model, Op
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Exams extends Model {
@@ -9,8 +9,17 @@ module.exports = (sequelize, DataTypes) => {
       Exams.belongsToMany(models.Laboratories, { through: 'LabExams', foreignKey: 'examId' });
       Exams.addScope('laboratories', {
         include: [
-          { model: sequelize.models.Laboratories, where: { status: 'ACTIVE' }, required: false }
+          { model: sequelize.models.Laboratories, where: { inactivatedAt: null }, required: false }
         ]
+      });
+      Exams.addScope('active', {
+        where: { inactivatedAt: null }
+      });
+    }
+
+    static searchByName(name) {
+      return Exams.scope('active', 'laboratories').findAll({
+        where: { name: { [Op.iLike]: `%${name}%` } }
       });
     }
   }
@@ -27,12 +36,25 @@ module.exports = (sequelize, DataTypes) => {
     type:  {
       type: DataTypes.ENUM(['CLINICAL_ANALYSIS', 'IMAGE'])
     },
-    status:  {
-      type: DataTypes.ENUM(['ACTIVE', 'INACTIVE'])
+    inactivatedAt:  {
+      type: DataTypes.DATE
+    },
+    status: {
+      type: DataTypes.VIRTUAL,
+      set: function (val) {
+        if (val == 'ACTIVE') {
+          // It is not possible to reactivate this model
+          return;
+        }
+        this.setDataValue('inactivatedAt', new Date());
+      },
+      get: function () {
+        return this.getDataValue('inactivatedAt') == null ? 'ACTIVE' : 'INACTIVE';
+      }
     },
   }, {
     sequelize,
-    modelName: 'Exams',
+    modelName: 'Exams'
   });
 
   return Exams;

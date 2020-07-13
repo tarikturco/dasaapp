@@ -41,17 +41,19 @@ const deleteRequest = async (req, res, next) => {
 const readRequest = async (req, res, next) => {
 
   try {
+    let response;
 
     if (req.params.id) {
-      const exam = await findByPk('Exams', req.params.id);
-      return res.send(exam);
+      response = await findByPk('Exams', req.params.id);
+    } else if (req.query.search) {
+      response = await models.Exams.searchByName(req.query.search);
+    } else {
+      response = await models.Exams.findAll({
+        where: { status: 'ACTIVE' }
+      });
     }
 
-    const exams = await models.Exams.findAll({
-      where: { status: 'ACTIVE' }
-    });
-
-    return res.send(exams);
+    return res.send(response);
   } catch (error) {
     next(error);
   }

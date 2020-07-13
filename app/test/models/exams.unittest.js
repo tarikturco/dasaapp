@@ -65,6 +65,15 @@ describe('Exams model', () => {
 
   });
 
+  it('Should search exams by name', async () => {
+
+    await models.Exams.create({ name: 'Another blood exam', type: 'CLINICAL_ANALYSIS' });
+
+    const exams = await models.Exams.searchByName('BLOOD');
+
+    assert.equal(exams.length, 2, 'Two exams were found');
+  });
+
   it('Should not create an exam when there already exist one with the same name', async () => {
 
     try {
@@ -77,6 +86,23 @@ describe('Exams model', () => {
       assert.equal(error.name, 'SequelizeUniqueConstraintError', 'The error thrown is correct');
     }
 
+  });
+
+  it('Should deactivate an exam', async () => {
+
+    const exam = await models.Exams.findByPk(1);
+    assert.equal(exam.status, 'ACTIVE', 'The current status is active');
+
+    await exam.update({ status: 'INACTIVE' });
+
+    assert.notEqual(exam.deactivatedAt, 'deactivatedAt is not true');
+
+    const activeExam = await models.Exams.scope('active').findByPk(1);
+
+    assert.ok(!activeExam, 'There is no active exam with this id');
+
+    await exam.update({ status: 'ACTIVE' });
+    assert.equal(exam.status, 'INACTIVE', 'The status is still inactive (it is not possible to reactivate)');
   });
 
   after(async () => {

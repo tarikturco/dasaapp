@@ -11,15 +11,14 @@ module.exports = {
       name: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
+        unique: true
       },
       address: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      status: {
-        type: Sequelize.ENUM('ACTIVE', 'INACTIVE'),
-        defaultValue: 'ACTIVE',
+      inactivatedAt: {
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,
