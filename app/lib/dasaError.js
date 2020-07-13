@@ -1,4 +1,4 @@
-class DasaError extends Error {  
+class DasaError extends Error {
   constructor (modelName, message) {
     super(message);
 

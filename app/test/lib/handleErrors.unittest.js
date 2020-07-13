@@ -5,7 +5,7 @@ const handleErrors = require('../../lib/handleErrors');
 const DasaError = require('../../lib/dasaError');
 
 describe('HandleErrors lib', () => {
-  
+
   let next, res, send;
 
   before(() => {
@@ -15,7 +15,7 @@ describe('HandleErrors lib', () => {
       status: sinon.stub().returns({ send })
     };
   });
-  
+
   beforeEach(() => {
     next.resetHistory();
     send.resetHistory();
@@ -31,10 +31,10 @@ describe('HandleErrors lib', () => {
   });
 
   it('Should call res.status.send when calling handleSequelizeError and the error is a sequelize one', async () => {
-    
+
     const sequelizeError = new Error('Sequelize error');
     sequelizeError.name = 'SequelizeValidationError';
-    
+
     handleErrors.handleSequelizeErrors(sequelizeError, null, res, next);
     assert.ok(res.status.calledOnce, 'res.status was called once');
     assert.equal(res.status.args[0][0], 400, 'The correct error code was sent');
@@ -53,9 +53,9 @@ describe('HandleErrors lib', () => {
   });
 
   it('Should call res.status.send when calling handleDasaError and the error is a NOT_FOUND one', async () => {
-    
+
     const dasaError = new DasaError('entries', 'NOT_FOUND');
-    
+
     handleErrors.handleDasaErrors(dasaError, null, res, next);
     assert.ok(res.status.calledOnce, 'res.status was called once');
     assert.equal(res.status.args[0][0], 404, 'The correct error code was sent');
@@ -65,9 +65,9 @@ describe('HandleErrors lib', () => {
   });
 
   it('Should call res.status.send when calling handleDasaError and the error is an INACTIVE one', async () => {
-    
+
     const dasaError = new DasaError('entries', 'INACTIVE');
-    
+
     handleErrors.handleDasaErrors(dasaError, null, res, next);
     assert.ok(res.status.calledOnce, 'res.status was called once');
     assert.equal(res.status.args[0][0], 412, 'The correct error code was sent');
@@ -77,9 +77,9 @@ describe('HandleErrors lib', () => {
   });
 
   it('Should call next when calling handleDasaError and the error is an unmapped DasaError', async () => {
-    
+
     const dasaError = new DasaError('entries', 'UNMAPPED_ERROR');
-    
+
     handleErrors.handleDasaErrors(dasaError, null, res, next);
     assert.ok(res.status.notCalled, 'res.status was not called');
     assert.ok(send.notCalled, 'res.status.send was not called');

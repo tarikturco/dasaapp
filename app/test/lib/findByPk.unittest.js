@@ -12,12 +12,12 @@ describe('FindByPk lib', () => {
       scope: sinon.stub(),
       findByPk: sinon.stub()
     };
-    
+
   });
 
   it('Should throw a not found error', async () => {
     models.stubbedModel.findByPk.resolves();
-    
+
     try {
       await findByPk('stubbedModel', 23);
       throw new Error('There is no error');
@@ -30,7 +30,7 @@ describe('FindByPk lib', () => {
 
   it('Should throw an inactive error', async () => {
     models.stubbedModel.findByPk.resolves({ status: 'INACTIVE' });
-    
+
     try {
       await findByPk('stubbedModel', 23);
       throw new Error('There is no error');
@@ -43,7 +43,7 @@ describe('FindByPk lib', () => {
 
   it('Should call findByPk and return the entry correctly', async () => {
     models.stubbedModel.findByPk.withArgs(18).resolves({ id: 18, status: 'ACTIVE' });
-    
+
     const entry = await findByPk('stubbedModel', 18);
     assert.equal(entry.id, 18, 'The entry was retrieved correctly');
     assert.ok(models.stubbedModel.scope.notCalled, 'The scope method was not called');
@@ -52,7 +52,7 @@ describe('FindByPk lib', () => {
   it('Should call a scoped findByPk and return the entry correctly', async () => {
     models.stubbedModel.scope.returns(models.stubbedModel);
     models.stubbedModel.findByPk.withArgs(15).resolves({ id: 15, status: 'ACTIVE' });
-    
+
     const entry = await findByPk('stubbedModel', 15, 'some scope');
     assert.equal(entry.id, 15, 'The entry was retrieved correctly');
     assert.ok(models.stubbedModel.scope.calledOnce, 'The scope method was called');
