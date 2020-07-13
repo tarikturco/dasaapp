@@ -21,6 +21,7 @@ describe('Laboratory controller', () => {
 
     sandbox.stub(models.Laboratories, 'create');
     sandbox.stub(models.Laboratories, 'findAll');
+    sandbox.stub(models.Laboratories, 'findByPk');
 
     labController = require('../../controllers/laboratories');
   });
@@ -52,14 +53,15 @@ describe('Laboratory controller', () => {
     it('Should send the lab created when there is no error in createRequest', async () => {
       const body = { name: 'Lab name', address: 'Street avenue' };
 
-      models.Laboratories.create.resolves({ id: 3 });
+      models.Laboratories.create.resolves({ id: 7 });
+      models.Laboratories.findByPk.resolves({ id: 7 });
 
       await labController.createRequest({ body }, res, next);
 
       assert.ok(res.status.calledOnce, 'res.status was called once');
       assert.equal(res.status.args[0][0], 201, 'The correct response code was sent');
       assert.ok(res.send.calledOnce, 'res.send was called once');
-      assert.deepEqual(res.send.args[0][0], { id: 3 }, 'The correct response was sent');
+      assert.deepEqual(res.send.args[0][0], { id: 7 }, 'The correct response was sent');
       assert.ok(next.notCalled, 'Next was not called');
     });
 
@@ -83,10 +85,11 @@ describe('Laboratory controller', () => {
 
     it('Should update the lab when calling updateRequest correctly', async () => {
       const body = { name: 'Another lab name', address: 'Another street' };
-      const params = { id: 3 };
-      const lab = { id: 3, update: sandbox.stub() };
+      const params = { id: 8 };
+      const lab = { id: 8, update: sandbox.stub() };
 
-      findByPk.withArgs('Laboratories', 3).resolves(lab);
+      findByPk.withArgs('Laboratories', 8).resolves(lab);
+      models.Laboratories.findByPk.withArgs('Laboratories', 8).resolves(lab);
 
       await labController.updateRequest({ body, params }, res, next);
 

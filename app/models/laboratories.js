@@ -1,6 +1,6 @@
 'use strict';
 const {
-  Model
+  Model, Op
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Laboratories extends Model {
@@ -10,6 +10,13 @@ module.exports = (sequelize, DataTypes) => {
       Laboratories.addScope('active', {
         where: { inactivatedAt: null }
       });
+    }
+
+    static bulkInactivate(ids) {
+      return Laboratories.update(
+        { inactivatedAt: new Date() },
+        { where: { id: { [Op.in]: ids } } }
+      );
     }
   }
 

@@ -22,6 +22,13 @@ module.exports = (sequelize, DataTypes) => {
         where: { name: { [Op.iLike]: `%${name}%` } }
       });
     }
+
+    static bulkInactivate(ids) {
+      return Exams.update(
+        { inactivatedAt: new Date() },
+        { where: { id: { [Op.in]: ids } } }
+      );
+    }
   }
 
   Exams.init({

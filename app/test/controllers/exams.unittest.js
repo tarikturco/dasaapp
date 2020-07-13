@@ -21,6 +21,7 @@ describe('Exam controller', () => {
 
     sandbox.stub(models.Exams, 'create');
     sandbox.stub(models.Exams, 'findAll');
+    sandbox.stub(models.Exams, 'findByPk');
     sandbox.stub(models.Exams, 'searchByName');
 
     examController = require('../../controllers/exams');
@@ -55,6 +56,7 @@ describe('Exam controller', () => {
       const body = { name: 'Exam name', type: 'IMAGE' };
 
       models.Exams.create.resolves({ id: 3 });
+      models.Exams.findByPk.resolves({ id: 3 });
 
       await examController.createRequest({ body }, res, next);
 
@@ -88,6 +90,7 @@ describe('Exam controller', () => {
       const exam = { id: 3, update: sandbox.stub() };
 
       findByPk.withArgs('Exams', 3).resolves(exam);
+      models.Exams.findByPk.resolves(exam);
 
       await examController.updateRequest({ body, params }, res, next);
 
@@ -202,122 +205,6 @@ describe('Exam controller', () => {
 
       assert.ok(res.send.calledOnce, 'res.send was called once');
       assert.equal(res.send.args[0][0], exams, 'res.send was called correctly');
-
-      assert.ok(next.notCalled, 'Next was not called');
-    });
-
-  });
-
-
-  describe('readLaboratoriesRequest', () => {
-
-    it('Should call next in readLaboratoriesRequest when findByPk throws an error with an id param', async () => {
-      const params = { id: 404 };
-
-      findByPk.withArgs('Exams', 404, 'laboratories').rejects('Not found');
-
-      await examController.readLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledOnce, 'findByPk was called once');
-      assert.ok(res.status.notCalled, 'res.status was not called');
-      assert.ok(res.send.notCalled, 'res.send was not called');
-      assert.ok(next.calledOnce, 'Next was called once');
-      assert.equal(next.args[0][0], 'Not found', 'next arg is correct');
-    });
-
-    it('Should return the exam labs correctly', async () => {
-      const params = { id: 6 };
-      const exam = { Laboratories: [1,4,67] };
-
-      findByPk.withArgs('Exams', 6, 'laboratories').resolves(exam);
-
-      await examController.readLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledOnce, 'findByPk was called once');
-      assert.ok(models.Exams.findAll.notCalled, 'find all exams was not called');
-
-      assert.ok(res.send.calledOnce, 'res.send was called once');
-      assert.deepEqual(res.send.args[0][0], [1,4,67], 'res.send was called correctly');
-
-      assert.ok(next.notCalled, 'Next was not called');
-    });
-
-  });
-
-  describe('createLaboratoriesRequest', () => {
-
-    it('Should call next in createLaboratoriesRequest when findByPk throws an error with an id param', async () => {
-      const params = { id: 404 };
-
-      findByPk.withArgs('Exams', 404, 'laboratories').rejects('Not found');
-
-      await examController.createLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledOnce, 'findByPk was called once');
-
-      assert.ok(res.status.notCalled, 'res.status was not called');
-      assert.ok(res.send.notCalled, 'res.send was not called');
-      assert.ok(next.calledOnce, 'Next was called once');
-      assert.equal(next.args[0][0], 'Not found', 'next arg is correct');
-    });
-
-    it('Should associate the exam with the lab correctly', async () => {
-      const params = { id: 6, associate_id: 37 };
-      const exam = { id: 6, addLaboratory: sandbox.stub() };
-      const lab = { id: 37 };
-
-      findByPk.withArgs('Exams', 6, 'laboratories').resolves(exam);
-      findByPk.withArgs('Laboratories', 37).resolves(lab);
-
-      await examController.createLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledTwice, 'findByPk was called twice');
-      assert.ok(exam.addLaboratory.calledOnce, 'The lab was associated to the exam');
-      assert.equal(exam.addLaboratory.args[0][0], lab, 'The lab was associated to the exam correctly');
-
-      assert.ok(res.status.calledOnce, 'res.send was called once');
-      assert.ok(res.send.calledOnce, 'res.send was called once');
-
-      assert.ok(next.notCalled, 'Next was not called');
-    });
-
-  });
-
-  describe('deleteLaboratoriesRequest', () => {
-
-    it('Should call next in deleteLaboratoriesRequest when findByPk throws an error with an id param', async () => {
-      const params = { id: 6, disassociate_id: 404 };
-
-      findByPk.withArgs('Exams', 6, 'laboratories').resolves({ id: 6 });
-      findByPk.withArgs('Laboratories', 404).rejects('Lab not found');
-
-      await examController.deleteLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledTwice, 'findByPk was called twice');
-
-      assert.ok(res.status.notCalled, 'res.status was not called');
-      assert.ok(res.send.notCalled, 'res.send was not called');
-      assert.ok(next.calledOnce, 'Next was called once');
-
-      assert.equal(next.args[0][0], 'Lab not found', 'next arg is correct');
-    });
-
-    it('Should disassociate the exam with the lab correctly', async () => {
-      const params = { id: 6, disassociate_id: 37 };
-      const exam = { id: 6, removeLaboratory: sandbox.stub() };
-      const lab = { id: 37 };
-
-      findByPk.withArgs('Exams', 6, 'laboratories').resolves(exam);
-      findByPk.withArgs('Laboratories', 37).resolves(lab);
-
-      await examController.deleteLaboratoriesRequest({ params }, res, next);
-
-      assert.ok(findByPk.calledTwice, 'findByPk was called twice');
-      assert.ok(exam.removeLaboratory.calledOnce, 'The lab was disassociated to the exam');
-      assert.equal(exam.removeLaboratory.args[0][0], lab, 'The lab was disassociated to the exam correctly');
-
-      assert.ok(res.status.calledOnce, 'res.send was called once');
-      assert.ok(res.send.calledOnce, 'res.send was called once');
 
       assert.ok(next.notCalled, 'Next was not called');
     });

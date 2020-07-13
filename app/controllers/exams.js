@@ -3,12 +3,39 @@ const findByPk = require('../lib/findByPk');
 
 const createRequest = async (req, res, next) => {
 
+  if (req.body.exams) {
+    return bulkCreateRequest(req, res, next);
+  }
+
   const { name, type } = req.body;
 
   try {
     const exam = await models.Exams.create({ name, type });
 
-    return res.status(201).send(exam);
+    if (req.body.labIds)
+      await exam.setLaboratories(req.body.labIds);
+
+    const examResponse = await models.Exams.scope('active', 'laboratories').findByPk(exam.id);
+
+    return res.status(201).send(examResponse);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkCreateRequest = async (req, res, next) => {
+
+  const exams = req.body.exams.map((exam) => {
+    return {
+      name: exam.name,
+      type: exam.type
+    };
+  });
+
+  try {
+    const response = await models.Exams.bulkCreate(exams);
+
+    return res.status(201).send(response);
   } catch (error) {
     next(error);
   }
@@ -19,7 +46,13 @@ const updateRequest = async (req, res, next) => {
   try {
     const exam = await findByPk('Exams', req.params.id);
     await exam.update({ name: req.body.name, type: req.body.type });
-    return res.send(exam);
+
+    if (req.body.labIds)
+      await exam.setLaboratories(req.body.labIds);
+
+    const examResponse = await models.Exams.scope('active', 'laboratories').findByPk(exam.id);
+
+    return res.send(examResponse);
   } catch (error) {
     next(error);
   }
@@ -38,19 +71,29 @@ const deleteRequest = async (req, res, next) => {
   }
 };
 
+const bulkDeleteRequest = async (req, res, next) => {
+
+  try {
+    const ids = req.body.ids;
+    await models.Exams.bulkInactivate(ids);
+
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
 const readRequest = async (req, res, next) => {
 
   try {
     let response;
 
     if (req.params.id) {
-      response = await findByPk('Exams', req.params.id);
+      response = await findByPk('Exams', req.params.id, 'laboratories');
     } else if (req.query.search) {
       response = await models.Exams.searchByName(req.query.search);
     } else {
-      response = await models.Exams.findAll({
-        where: { status: 'ACTIVE' }
-      });
+      response = await models.Exams.scope('active', 'laboratories').findAll();
     }
 
     return res.send(response);
@@ -59,53 +102,10 @@ const readRequest = async (req, res, next) => {
   }
 };
 
-const readLaboratoriesRequest = async (req, res, next) => {
-
-  try {
-    const exam = await findByPk('Exams', req.params.id, 'laboratories');
-
-    return res.send(exam.Laboratories);
-  } catch (error) {
-    next(error);
-  }
-
-};
-
-const createLaboratoriesRequest = async (req, res, next) => {
-
-  try {
-    const exam = await findByPk('Exams', req.params.id, 'laboratories');
-    const lab = await findByPk('Laboratories', req.params.associate_id);
-
-    await exam.addLaboratory(lab);
-    res.status(201).send();
-
-  } catch (error) {
-    next(error);
-  }
-
-};
-const deleteLaboratoriesRequest = async (req, res, next) => {
-
-  try {
-    const exam = await findByPk('Exams', req.params.id, 'laboratories');
-    const lab = await findByPk('Laboratories', req.params.disassociate_id);
-
-    await exam.removeLaboratory(lab);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-
-};
-
 module.exports = {
   createRequest,
   updateRequest,
   deleteRequest,
+  bulkDeleteRequest,
   readRequest,
-  readLaboratoriesRequest,
-  createLaboratoriesRequest,
-  deleteLaboratoriesRequest,
-  association: 'laboratories',
 };
