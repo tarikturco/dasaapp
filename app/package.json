@@ -1,0 +1,25 @@
+{
+  "scripts": {
+    "migrate": "npx sequelize db:migrate",
+    "test": "./test.sh"
+  },
+  "nyc": {
+    "report-dir": "./coverage",
+    "temp-dir": "/tmp/.nyc-output"
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "pg": "^8.3.0",
+    "pg-hstore": "^2.3.3",
+    "pluralize": "^8.0.0",
+    "sequelize": "^6.3.1"
+  },
+  "devDependencies": {
+    "mocha": "6.1.4",
+    "mock-require": "^3.0.3",
+    "nyc": "14.1.1",
+    "sinon": "7.3.2"
+  }
+}

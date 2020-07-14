@@ -1,0 +1,44 @@
+version: '3.6'
+services:
+  dasaapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: postgresql://root:root@db:5432/dasa
+      NODE_ENV: development
+    image: dasaapp
+    command: nodemon server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app:/app
+    stdin_open: true
+    tty: true
+    links:
+      - db
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: dasa
+    volumes:
+      - "./database/data:/var/lib/postgres"
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dasaapp
+    command: npm test
+    volumes:
+      - ./app:/app
+    links:
+      - dbtest
+  dbtest:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: dasatest
+    restart: always

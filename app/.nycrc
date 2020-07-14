@@ -1,0 +1,3 @@
+{
+	"exclude": ["models/index.js", "test/**"]
+}

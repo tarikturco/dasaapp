@@ -1,0 +1,19 @@
+{
+  "development": {
+    "use_env_variable": "DB_URL",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "test",
+    "password": "test",
+    "database": "dasatest",
+    "host": "dbtest",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "production": {
+    "use_env_variable": "DB_URL",
+    "dialect": "postgres",
+    "logging": false
+  }
+}
