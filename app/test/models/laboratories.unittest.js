@@ -76,4 +76,26 @@ describe('Laboratories model', () => {
     await models.Laboratories.destroy({ truncate: true });
   });
 
+  it('Should bulk create and bulk inactivate some labs', async () => {
+
+    const labs = [
+      { name: 'Delboni Berrini', address: 'Avenida Luis Carlos Berrini' },
+      { name: 'Salomao Zoppi Angelica', address: 'Avenida Angelica' },
+      { name: 'Salomao Zoppi Moema', address: 'Moema' },
+      { name: 'Delboni Vila Mariana', address: 'Vila Mariana' },
+    ];
+
+    const created = await models.Laboratories.bulkCreate(labs);
+
+    assert.equal(created.length, 4, '4 labs were created');
+
+    const ids = created.map((lab) => lab.id);
+
+    await models.Laboratories.bulkInactivate(ids);
+
+    const actives = await models.Laboratories.scope('active').findAll({ where: { id: { [models.Sequelize.Op.in]: ids } } });
+
+    assert.equal(actives.length, 0, 'There is no active lab');
+  });
+
 });

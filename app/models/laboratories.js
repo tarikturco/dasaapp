@@ -10,6 +10,11 @@ module.exports = (sequelize, DataTypes) => {
       Laboratories.addScope('active', {
         where: { inactivatedAt: null }
       });
+      Laboratories.addScope('exams', {
+        include: [{
+          model: models.Exams, where: { inactivatedAt: null }, required: false
+        }]
+      });
     }
 
     static bulkInactivate(ids) {

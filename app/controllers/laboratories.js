@@ -12,7 +12,12 @@ const createRequest = async (req, res, next) => {
   try {
     const lab = await models.Laboratories.create({ name, address });
 
-    return res.status(201).send(lab);
+    if (req.body.examIds)
+      await lab.setExams(req.body.examIds);
+
+    const labResponse = await models.Laboratories.scope('active', 'exams').findByPk(lab.id);
+
+    return res.status(201).send(labResponse);
   } catch (error) {
     next(error);
   }
@@ -42,10 +47,14 @@ const updateRequest = async (req, res, next) => {
 
   try {
     const lab = await findByPk('Laboratories', req.params.id);
-
     await lab.update({ name, address });
 
-    return res.send(lab);
+    if (req.body.examIds)
+      await lab.setExams(req.body.examIds);
+
+    const labResponse = await models.Laboratories.scope('active', 'exams').findByPk(lab.id);
+
+    return res.send(labResponse);
   } catch (error) {
     next(error);
   }
@@ -81,12 +90,12 @@ const readRequest = async (req, res, next) => {
   try {
     if (req.params.id) {
 
-      const lab = await findByPk('Laboratories', req.params.id);
+      const lab = await findByPk('Laboratories', req.params.id, 'exams');
 
       return res.send(lab);
     }
 
-    const labs = await models.Laboratories.scope('active').findAll();
+    const labs = await models.Laboratories.scope('active', 'exams').findAll();
 
     return res.send(labs);
   } catch (error) {

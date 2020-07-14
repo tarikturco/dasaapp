@@ -20,21 +20,17 @@ describe('Exam controller', () => {
     mock('../../lib/findByPk', findByPk);
 
     sandbox.stub(models.Exams, 'create');
+    sandbox.stub(models.Exams, 'bulkCreate');
     sandbox.stub(models.Exams, 'findAll');
     sandbox.stub(models.Exams, 'findByPk');
     sandbox.stub(models.Exams, 'searchByName');
+    sandbox.stub(models.Exams, 'bulkInactivate');
 
     examController = require('../../controllers/exams');
   });
 
   beforeEach(() => {
-    next.resetHistory();
-    findByPk.resetHistory();
-    models.Exams.create.resetHistory();
-    models.Exams.findAll.resetHistory();
-    models.Exams.searchByName.resetHistory();
-    res.send.resetHistory();
-    res.status.resetHistory();
+    sandbox.resetHistory();
   });
 
   describe('createRequest', () => {
@@ -64,6 +60,68 @@ describe('Exam controller', () => {
       assert.equal(res.status.args[0][0], 201, 'The correct response code was sent');
       assert.ok(res.send.calledOnce, 'res.send was called once');
       assert.deepEqual(res.send.args[0][0], { id: 3 }, 'The correct response was sent');
+      assert.ok(next.notCalled, 'Next was not called');
+    });
+
+    it('Should create an exam with some labs', async () => {
+      const body = { name: 'Exam already associated with labs', type: 'IMAGE', labIds: [23,76] };
+
+      const exam = { id: 5, setLaboratories: sandbox.stub() };
+
+      models.Exams.create.resolves(exam);
+      models.Exams.findByPk.resolves({ id: 5 });
+
+      await examController.createRequest({ body }, res, next);
+
+      assert.ok(exam.setLaboratories.calledOnce, 'The associatons were made');
+      assert.deepEqual(exam.setLaboratories.args, [[[23,76]]], 'The associatons were made correctly');
+
+      assert.ok(res.status.calledOnce, 'res.status was called once');
+      assert.equal(res.status.args[0][0], 201, 'The correct response code was sent');
+      assert.ok(res.send.calledOnce, 'res.send was called once');
+      assert.deepEqual(res.send.args[0][0], { id: 5 }, 'The correct response was sent');
+      assert.ok(next.notCalled, 'Next was not called');
+    });
+
+  });
+
+  describe('bulkCreateRequest', () => {
+
+    it('Should call next in createRequest when models.Exams.bulkCreate throws an error', async () => {
+      const body = { exams: [] };
+
+      models.Exams.bulkCreate.rejects('Bulk creation error');
+
+      await examController.createRequest({ body }, res, next);
+
+      assert.ok(res.status.notCalled, 'res.status was not called');
+      assert.ok(res.send.notCalled, 'res.send was not called');
+      assert.ok(next.calledOnce, 'Next was called once');
+      assert.equal(next.args[0][0], 'Bulk creation error', 'next arg is correct');
+    });
+
+    it('Should call bulkCreate when passing multiple exams in createRequest', async () => {
+      const body = { exams: [
+        { name: 'Exam 1', type: 'CLINICAL_ANALYSIS' },
+        { name: 'Exam 2', type: 'IMAGE', something: 'random' } ]
+      };
+
+      models.Exams.bulkCreate.resolves({ response: true });
+
+      await examController.createRequest({ body }, res, next);
+
+      const expectedArgs = [
+        { name: 'Exam 1', type: 'CLINICAL_ANALYSIS' },
+        { name: 'Exam 2', type: 'IMAGE' }
+      ];
+
+      assert.ok(models.Exams.bulkCreate.calledOnce, 'bulkCreate was called once');
+      assert.deepEqual(models.Exams.bulkCreate.args, [[expectedArgs]], 'bulkCreate was called correctly');
+
+      assert.ok(res.status.calledOnce, 'res.status was called once');
+      assert.equal(res.status.args[0][0], 201, 'The correct response code was sent');
+      assert.ok(res.send.calledOnce, 'res.send was called once');
+      assert.deepEqual(res.send.args[0][0], { response: true  }, 'The correct response was sent');
       assert.ok(next.notCalled, 'Next was not called');
     });
 
@@ -102,6 +160,27 @@ describe('Exam controller', () => {
       assert.ok(next.notCalled, 'Next was not called');
     });
 
+    it('Should update the exam and associate it with some labs', async () => {
+      const body = { type: 'IMAGE', labIds: [48,144] };
+      const params = { id: 8 };
+
+      const exam = { id: 8, update: sandbox.stub(), setLaboratories: sandbox.stub() };
+
+      findByPk.withArgs('Exams', 8).resolves(exam);
+      models.Exams.findByPk.resolves({ id: 8 });
+
+      await examController.updateRequest({ body, params }, res, next);
+
+      assert.ok(exam.setLaboratories.calledOnce, 'The associatons were made');
+      assert.deepEqual(exam.setLaboratories.args, [[[48,144]]], 'The associatons were made correctly');
+
+      assert.ok(exam.update.calledOnce, 'The exam was updated');
+
+      assert.ok(res.send.calledOnce, 'res.send was called once');
+      assert.deepEqual(res.send.args[0][0], { id: 8 }, 'The correct response was sent');
+      assert.ok(next.notCalled, 'Next was not called');
+    });
+
   });
 
   describe('deleteRequest', () => {
@@ -130,6 +209,36 @@ describe('Exam controller', () => {
 
       assert.ok(exam.update.calledOnce, 'The exam was updated');
       assert.deepEqual(exam.update.args[0][0], { status: 'INACTIVE' }, 'The exam was updated correctly');
+
+      assert.ok(res.status.calledOnce, 'res.status was called once');
+      assert.equal(res.status.args[0][0], 204, 'The correct response was sent');
+      assert.ok(res.send.calledOnce, 'res.send was called once');
+      assert.ok(next.notCalled, 'Next was not called');
+    });
+
+  });
+
+  describe('bulkDeleteRequest', () => {
+
+    it('Should call next in deleteRequest when an error occurs', async () => {
+      const body = { ids: [-1] };
+
+      models.Exams.bulkInactivate.rejects('Some random error');
+
+      await examController.bulkDeleteRequest({ body }, res, next);
+
+      assert.ok(res.status.notCalled, 'res.status was not called');
+      assert.ok(res.send.notCalled, 'res.send was not called');
+      assert.ok(next.calledOnce, 'Next was called once');
+      assert.equal(next.args[0][0], 'Some random error', 'next arg is correct');
+    });
+
+    it('Should bulk delete the exam by given ids', async () => {
+      const body = { ids: [1,23, 77] };
+
+      models.Exams.bulkInactivate.withArgs([1,23,77]).resolves();
+
+      await examController.bulkDeleteRequest({ body }, res, next);
 
       assert.ok(res.status.calledOnce, 'res.status was called once');
       assert.equal(res.status.args[0][0], 204, 'The correct response was sent');

@@ -105,6 +105,28 @@ describe('Exams model', () => {
     assert.equal(exam.status, 'INACTIVE', 'The status is still inactive (it is not possible to reactivate)');
   });
 
+  it('Should bulk create and bulk inactivate some exams', async () => {
+
+    const exams = [
+      { name: 'Eletrocardiograma', type: 'IMAGE' },
+      { name: 'Ecocardiograma', type: 'IMAGE' },
+      { name: 'Exame de plaquetas', type: 'CLINICAL_ANALYSIS' },
+      { name: 'Estudo do colesterol', type: 'CLINICAL_ANALYSIS' },
+    ];
+
+    const created = await models.Exams.bulkCreate(exams);
+
+    assert.equal(created.length, 4, '4 exams were created');
+
+    const ids = created.map((exam) => exam.id);
+
+    await models.Exams.bulkInactivate(ids);
+
+    const actives = await models.Exams.scope('active').findAll({ where: { id: { [models.Sequelize.Op.in]: ids } } });
+
+    assert.equal(actives.length, 0, 'There is no active exam');
+  });
+
   after(async () => {
     await models.Exams.destroy({ truncate: true });
   });
